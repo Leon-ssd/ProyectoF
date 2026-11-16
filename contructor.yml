@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  postgres_db:
+    image: postgres:16-alpine
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-stream_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secreto123}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - stream-network
+
+  stream_api:
+    build:
+      context: ./StreamApp
+      dockerfile: Dockerfile
+    container_name: stream_api
+    environment:
+      - DB_CONNECTION_STRING=Host=${DB_HOST:-postgres_db};Port=5432;Database=${DB_NAME:-stream_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-secreto123}
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    depends_on:
+      - postgres_db
+    networks:
+      - stream-network
+
+volumes:
+  pgdata:
+
+networks:
+  stream-network:
+    driver: bridge

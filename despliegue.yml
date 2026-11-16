@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres_db:
+    image: postgres:16-alpine
+    deploy:
+      restart_policy:
+        condition: on-failure
+    environment:
+      POSTGRES_DB: stream_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secreto123
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - stream-network
+
+  stream_api:
+    image: stream_api:latest
+    deploy:
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+    environment:
+      - DB_CONNECTION_STRING=Host=postgres_db;Port=5432;Database=stream_db;Username=postgres;Password=secreto123
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres_db
+    networks:
+      - stream-network
+
+volumes:
+  pgdata:
+
+networks:
+  stream-network:
+    driver: overlay
