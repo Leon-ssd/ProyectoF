@@ -1,7 +1,5 @@
-bin/
-obj/
 .env
-*.user
+**/bin/
+**/obj/
 .vs/
 .vscode/
-appsettings.Development.json
