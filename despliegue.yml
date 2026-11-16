@@ -1,32 +1,33 @@
-version: '3.8'
-
 services:
-  postgres_db:
+  postgres_db_prod:
     image: postgres:16-alpine
-    deploy:
-      restart_policy:
-        condition: on-failure
+    container_name: postgres_db_prod
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: stream_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: secreto123
+      POSTGRES_DB: ${DB_NAME:-stream_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secreto123}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-stream_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - stream-network
 
-  stream_api:
-    image: stream_api:latest
-    deploy:
-      replicas: 2
-      restart_policy:
-        condition: on-failure
+  stream_api_prod:
+    image: emanuelxd/stream-api:latest
+    container_name: stream_api_prod
+    restart: unless-stopped
     environment:
-      - DB_CONNECTION_STRING=Host=postgres_db;Port=5432;Database=stream_db;Username=postgres;Password=secreto123
+      - DB_CONNECTION_STRING=Host=postgres_db_prod;Port=5432;Database=${DB_NAME:-stream_db};Username=${DB_USER:-postgres};Password=${DB_PASSWORD:-secreto123}
     ports:
-      - "8080:8080"
+      - "${APP_PORT:-8080}:8080"
     depends_on:
-      - postgres_db
+      postgres_db_prod:
+        condition: service_healthy
     networks:
       - stream-network
 
@@ -35,4 +36,4 @@ volumes:
 
 networks:
   stream-network:
-    driver: overlay
+    driver: bridge
