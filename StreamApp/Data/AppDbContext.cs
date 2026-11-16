@@ -2,9 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 public class AppDbContext : DbContext
 {
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
-    {
-    }
+    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
-    // Agrega aquí tus DbSet<T> según tus modelos
+    public DbSet<Video> Videos { get; set; }
 }
